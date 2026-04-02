@@ -1,0 +1,98 @@
+<h2>Project: {{ state.project_id }}</h2>
+<p>Status: {{ state.status }} | Runtime: {{ state.runtime.status }}</p>
+
+<h3>History</h3>
+<pre>{{ state.history | tojson(indent=2) }}</pre>
+
+<h3>Last Intent</h3>
+<pre>{{ state.last_intent | tojson(indent=2) }}</pre>
+
+<h3>Blueprint</h3>
+<pre>{{ state.blueprint | tojson(indent=2) }}</pre>
+
+<h3>Last Diff</h3>
+<pre>{{ state.last_diff | tojson(indent=2) }}</pre>
+
+<h3>Diff Viewer</h3>
+
+{% for diff in state.last_diff %}
+<div style="margin-bottom: 20px;">
+  <strong>{{ diff.file }}</strong>
+  <em>({{ diff.action }})</em>
+
+  {% if diff.hunks %}
+  {% for h in diff.hunks %}
+  <div style="margin-left: 20px; margin-top: 8px;">
+    <div>
+      Hunk {{ h.index }}
+      <span style="color: green;">+{{ h.adds }}</span>
+      <span style="color: red;">-{{ h.deletes }}</span>
+    </div>
+
+    <pre style="background:#111; color:#ddd; padding:8px;">
+{% for line in h.lines %}
+{{ line }}
+{% endfor %}
+          </pre>
+  </div>
+  {% endfor %}
+  {% endif %}
+</div>
+{% endfor %}
+
+<h3>Runtime</h3>
+<pre>{{ state.runtime | tojson(indent=2) }}</pre>
+
+{% if state.retry %}
+<h3>Retry</h3>
+<pre>{{ state.retry | tojson(indent=2) }}</pre>
+{% endif %}
+
+{% if state.planning and state.planning.status == "incomplete" %}
+
+<h3>Planning Required</h3>
+
+<p>
+  Feature: <strong>{{ state.planning.feature }}</strong>
+</p>
+
+<ul>
+  {% for q in state.planning.questions %}
+  <li>{{ q }}</li>
+  {% endfor %}
+</ul>
+
+<input name="message" id="message1" placeholder="Answer the questions above" style="width: 400px;" required />
+<button type="submit" onclick="sendMessage1()">Submit</button>
+
+<h4>Current Decisions</h4>
+<pre>{{ state.planning.decisions | tojson(indent=2) }}</pre>
+
+{% endif %}
+
+<input name="message" id="message" placeholder="Enter command" />
+<button type="submit" onclick="sendMessage()">Send</button>
+
+<script>
+  async function sendMessage() {
+    await fetch("/chat/{{ state.project_id }}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: document.getElementById("message").value })
+    }).then(response => response.json()).then(data => {
+      console.log(data);
+      window.location.reload();
+    });
+  }
+
+  async function sendMessage1() {
+    await fetch("/chat/{{ state.project_id }}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: document.getElementById("message1").value })
+    }).then(response => response.json()).then(data => {
+      console.log(data);
+      window.location.reload();
+    });
+  }
+</script>

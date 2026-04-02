@@ -1,0 +1,29 @@
+<h2>Projects</h2>
+
+<input type="text" id="project_id" placeholder="Enter project ID">
+<input type="text" id="message" placeholder="Enter message">
+<button onclick="createProject()">Create Project</button>
+
+<ul>
+    {% for p in projects %}
+    <li>
+        <a href="/project/{{ p }}">{{ p }}</a>
+    </li>
+    {% endfor %}
+</ul>
+
+<script>
+    async function createProject() {
+        await fetch("/chat/" + document.getElementById("project_id").value, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: document.getElementById("message").value })
+        }).then(response => response.json()).then(data => {
+            console.log(data);
+
+            if (data.project_state) {
+                window.location.href = "/project/" + data.project_state.project_id;
+            }
+        });
+    }
+</script>
